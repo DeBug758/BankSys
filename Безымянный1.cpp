@@ -222,6 +222,12 @@ void update() {
 			n.lastTransaction = found.lastTransaction;
 			n.active = found.active;
 		}
+		else if (n.cardNumber == client.cardNumber) {
+			n.PIN = client.PIN;
+			n.balance = client.balance;
+			n.lastTransaction = client.lastTransaction;
+			n.active = client.active;
+		}
 		fout << n.bankID << ',' << n.name << ',' << n.cardNumber << ',' << n.PIN << ',' << n.balance << ',' << n.lastTransaction << "\n";
 	}
 	fout.flush();
@@ -295,12 +301,12 @@ void deposit_cash() {
 void modify_pin_code() {
 	cout << "\tThe Bank of MixChopLove\n" << endl;
 	if (found.active) {
-		int A;
+		string A;
 		cout << "Enter new PIN: ";
 		cin >> A;
 		found.PIN = A;
-		cout << "Changed succesfully!\n" << endl;
 		update();
+		cout << "Changed succesfully!\n" << endl;
 		cout << "Do you want return to main menu? (Y/N)";
 		char B;
 		cin >> B;
@@ -316,13 +322,13 @@ void modify_pin_code() {
 		}
 	}
 	else {
-		int A;
+		string A;
 		cout << "Setup your PIN (4 sym): ";
 		cin >> A;
 		found.PIN = A;
+		update();
 		cout << "Succesfully!\n" << endl;
 		found.active = true;
-		update();
 		cout << "Do you want return to main menu? (Y/N)";
 		char B;
 		cin >> B;
@@ -364,34 +370,48 @@ void show_balance() {
 void transfer_between_accounts() {
 	int N;
 	char A;
-	cout << "\tThe Bank of MixChopLove\n" << endl;
-	cout << "**Comission for fund transfers over 20,000 KZT is 500 KZT\n" << endl;
-	cout << "Beneficiary's card number: ";
-	cin >> N;
 	bool flag = false;
+	while (true) {
+		cout << "\tThe Bank of MixChopLove\n" << endl;
+		cout << "**Comission for fund transfers over 20,000 KZT is 500 KZT\n" << endl;
+		cout << "Beneficiary's card number: ";
+		cin >> N;
+		for (Client n : clients) {
+			if (N == n.cardNumber) {
+				flag = true;
+				cout << "Transfer amount (in KZT): ";
+				cin >> N;
+				if (N <= n.balance && N < 20000 && n.bankID == found.bankID) {
+					cout << endl;
+					cout << "Beneficiary's name: " << n.name << endl;
+					cout << "Confirm transfer? (Y/N): ";
+					cin >> A;
+					if (A == 'Y') {
+						n.balance += N;
+						found.balance -= N;
+						found.lastTransaction = -N;
+						n.lastTransaction = N;
 
-	for (Client n : clients) {
-		if (N == n.cardNumber) {
-			flag = true;
-			cout << "Transfer amount (in KZT): ";
-			cin >> N;
-			if (N <= n.balance && N < 20000 && n.bankID == found.bankID) {
-				cout << endl;
-				cout << "Beneficiary's name: " << n.name << endl;
-				cout << "Confirm transfer? (Y/N): ";
-				cin >> A;
-				if (A == 'Y') {
-					n.balance += N;
-					found.balance -= N;
-					found.lastTransaction = -N;
-					n.lastTransaction = N;
-					update();
-					cout << "Succesfylly! Do you want to return? (Y/N)";
-					cin >> A;
-					if (A == 'Y') {
-						clean();
-						menu();
-						break;
+						client.balance = n.balance;
+						client.bankID = n.bankID;
+						client.cardNumber = n.cardNumber;
+						client.lastTransaction = n.lastTransaction;
+						client.name = n.name;
+						client.PIN = n.PIN;
+
+						update();
+						cout << "Succesfylly! Do you want to return? (Y/N)";
+						cin >> A;
+						if (A == 'Y') {
+							clean();
+							menu();
+							break;
+						}
+						else {
+							clean();;
+							transfer_between_accounts();
+							break;
+						}
 					}
 					else {
 						clean();
@@ -399,119 +419,138 @@ void transfer_between_accounts() {
 						break;
 					}
 				}
+				else if (N <= n.balance + 700 && N > 20000 && n.bankID != found.bankID) {
+					cout << endl;
+					cout << "Beneficiary's name: " << n.name << endl;
+					cout << "Confirm transfer? (Y/N): ";
+					cin >> A;
+					if (A == 'Y') {
+						n.balance += N;
+						found.balance -= (N + 700);
+						found.lastTransaction = -(N + 700);
+						n.lastTransaction = N + 700;
+
+						client.balance = n.balance;
+						client.bankID = n.bankID;
+						client.cardNumber = n.cardNumber;
+						client.lastTransaction = n.lastTransaction;
+						client.name = n.name;
+						client.PIN = n.PIN;
+
+						update();
+						cout << "Succesfylly! Do you want to return? (Y/N)";
+						cin >> A;
+						if (A == 'Y') {
+							clean();
+							menu();
+							break;
+						}
+						else {
+							clean();
+							transfer_between_accounts();
+							break;
+						}
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
+				}
+				else if (N <= n.balance + 500 && N > 20000 && n.bankID == found.bankID) {
+					cout << endl;
+					cout << "Beneficiary's name: " << n.name << endl;
+					cout << "Confirm transfer? (Y/N): ";
+					cin >> A;
+					if (A == 'Y') {
+						n.balance += N;
+						found.balance -= (N + 500);
+						found.lastTransaction = -(N + 500);
+						n.lastTransaction = N + 500;
+
+						client.balance = n.balance;
+						client.bankID = n.bankID;
+						client.cardNumber = n.cardNumber;
+						client.lastTransaction = n.lastTransaction;
+						client.name = n.name;
+						client.PIN = n.PIN;
+
+						update();
+						cout << "Succesfylly! Do you want to return? (Y/N)";
+						cin >> A;
+						if (A == 'Y') {
+							clean();
+							menu();
+							break;
+						}
+						else {
+							clean();
+							transfer_between_accounts();
+							break;
+						}
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
+				}
+				else if (N <= n.balance + 200 && N < 20000 && n.bankID != found.bankID) {
+					cout << endl;
+					cout << "Beneficiary's name: " << n.name << endl;
+					cout << "Confirm transfer? (Y/N): ";
+					cin >> A;
+					if (A == 'Y') {
+						n.balance += N;
+						found.balance -= (N + 200);
+						found.lastTransaction = -(N + 200);
+						n.lastTransaction = N + 200;
+
+						client.balance = n.balance;
+						client.bankID = n.bankID;
+						client.cardNumber = n.cardNumber;
+						client.lastTransaction = n.lastTransaction;
+						client.name = n.name;
+						client.PIN = n.PIN;
+
+						update();
+						cout << "Succesfylly! Do you want to return? (Y/N)";
+						cin >> A;
+						if (A == 'Y') {
+							clean();
+							menu();
+							break;
+						}
+						else {
+							clean();
+							//transfer_between_accounts();
+							break;
+						}
+					}
+					else {
+						clean();
+						//transfer_between_accounts();
+						break;
+					}
+				}
 				else {
 					clean();
-					transfer_between_accounts();
+					//transfer_between_accounts();
 					break;
 				}
 			}
-			else if (N <= n.balance + 700 && N > 20000 && n.bankID != found.bankID) {
-				cout << endl;
-				cout << "Beneficiary's name: " << n.name << endl;
-				cout << "Confirm transfer? (Y/N): ";
-				cin >> A;
-				if (A == 'Y') {
-					n.balance += N;
-					found.balance -= (N + 700);
-					found.lastTransaction = -(N + 700);
-					n.lastTransaction = N + 700;
-					update();
-					cout << "Succesfylly! Do you want to return? (Y/N)";
-					cin >> A;
-					if (A == 'Y') {
-						clean();
-						menu();
-						break;
-					}
-					else {
-						clean();
-						transfer_between_accounts();
-						break;
-					}
-				}
-				else {
-					clean();
-					transfer_between_accounts();
-					break;
-				}
-			}
-			else if (N <= n.balance + 500 && N > 20000 && n.bankID == found.bankID) {
-				cout << endl;
-				cout << "Beneficiary's name: " << n.name << endl;
-				cout << "Confirm transfer? (Y/N): ";
-				cin >> A;
-				if (A == 'Y') {
-					n.balance += N;
-					found.balance -= (N + 500);
-					found.lastTransaction = -(N + 500);
-					n.lastTransaction = N + 500;
-					update();
-					cout << "Succesfylly! Do you want to return? (Y/N)";
-					cin >> A;
-					if (A == 'Y') {
-						clean();
-						menu();
-						break;
-					}
-					else {
-						clean();
-						transfer_between_accounts();
-						break;
-					}
-				}
-				else {
-					clean();
-					transfer_between_accounts();
-					break;
-				}
-			}
-			else if (N <= n.balance + 200 && N < 20000 && n.bankID != found.bankID) {
-				cout << endl;
-				cout << "Beneficiary's name: " << n.name << endl;
-				cout << "Confirm transfer? (Y/N): ";
-				cin >> A;
-				if (A == 'Y') {
-					n.balance += N;
-					found.balance -= (N + 200);
-					found.lastTransaction = -(N + 200);
-					n.lastTransaction = N + 200;
-					update();
-					cout << "Succesfylly! Do you want to return? (Y/N)";
-					cin >> A;
-					if (A == 'Y') {
-						clean();
-						menu();
-						break;
-					}
-					else {
-						clean();
-						transfer_between_accounts();
-						break;
-					}
-				}
-				else {
-					clean();
-					transfer_between_accounts();
-					break;
-				}
+		}
+		if (!flag) {
+			cout << "There is no such client. Do you want to exit to main menu? (Y/N): ";
+			cin >> A;
+			if (A == 'Y') {
+				clean();
+				menu();
+				break;
 			}
 			else {
 				clean();
-				transfer_between_accounts();
-				break;
 			}
-		}
-	}
-	if (!flag) {
-		cout << "There is no such client. Do you want to exit to main menu? (Y/N): ";
-		cin >> A;
-		if (A == 'Y') {
-			clean();
-			menu();
-		}
-		else {
-			clean();
-			transfer_between_accounts();
 		}
 	}
 }
