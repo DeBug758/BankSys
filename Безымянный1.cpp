@@ -13,7 +13,7 @@ using namespace this_thread;
 using namespace chrono_literals;
 
 void clean() {
-#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) //Íå çíàë, íà êàêîé ÎÑ áóäåò çàïóñê, ïîýòîìó ñäåëàë ïðîâåðêó
+#if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__)
 	system("cls");
 #else
 	printf("\033c");
