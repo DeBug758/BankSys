@@ -5,8 +5,12 @@
 #include <fstream>
 #include <ctype.h>
 #include <stdio.h>
+#include <chrono>
+#include <thread>
 
 using namespace std;
+using namespace this_thread;
+using namespace chrono_literals;
 
 void clean() {
 #if defined(WIN32) || defined(_WIN32) || defined(__WIN32) && !defined(__CYGWIN__) //Íå çíàë, íà êàêîé ÎÑ áóäåò çàïóñê, ïîýòîìó ñäåëàë ïðîâåðêó
@@ -43,11 +47,7 @@ Client found(1, "", 1, "1", 1, 1, true);
 
 void read_record()
 {
-
-	// File pointer
 	fstream fin;
-
-	// Open an existing file
 	fin.open("database.csv", ios::in);
 	vector<string> row;
 	string line, word, temp;
@@ -194,6 +194,9 @@ void menu() {
 			break;
 		}
 	case 6:
+		cout << "\nGoodbye, " << found.name << "!";
+		sleep_for(2s);
+		clean();
 		start();
 		break;
 	default:
@@ -206,6 +209,23 @@ void menu() {
 int main() {
 	read_record();
 	start();
+}
+
+void update() {
+	ofstream fout;
+	fout.open("database.csv", ofstream::out | ofstream::trunc);
+	fout << "Bank ID,Name,Card Number,PIN,Balance,Last Transaction\n";
+	for (Client n : clients) {
+		if (n.cardNumber == found.cardNumber) {
+			n.PIN = found.PIN;
+			n.balance = found.balance;
+			n.lastTransaction = found.lastTransaction;
+			n.active = found.active;
+		}
+		fout << n.bankID << ',' << n.name << ',' << n.cardNumber << ',' << n.PIN << ',' << n.balance << ',' << n.lastTransaction << "\n";
+	}
+	fout.flush();
+	fout.close();
 }
 
 void withdraw_cash() {
@@ -222,6 +242,7 @@ void withdraw_cash() {
 			cout << "\tThe Bank of MixChopLove\n" << endl;
 			cout << "Cash withdrawn succesfully!" << endl;
 			found.lastTransaction = -N;
+			update();
 			cout << "Remaining balance: " << found.balance << " KZT\n" << endl;
 			cout << "Would you like to return to main menu?(Y/N)";
 			cin >> A;
@@ -260,6 +281,7 @@ void deposit_cash() {
 	cout << "Remaining balance: " << found.balance << " KZT\n" << endl;
 	cout << "Would you like to return to main menu?(Y/N)";
 	cin >> A;
+	update();
 	if (A == 'Y') {
 		clean();
 		menu();
@@ -278,6 +300,7 @@ void modify_pin_code() {
 		cin >> A;
 		found.PIN = A;
 		cout << "Changed succesfully!\n" << endl;
+		update();
 		cout << "Do you want return to main menu? (Y/N)";
 		char B;
 		cin >> B;
@@ -286,6 +309,8 @@ void modify_pin_code() {
 			menu();
 		}
 		else {
+			cout << "\nGoodbye, " << found.name << "!";
+			sleep_for(2s);
 			clean();
 			start();
 		}
@@ -296,6 +321,8 @@ void modify_pin_code() {
 		cin >> A;
 		found.PIN = A;
 		cout << "Succesfully!\n" << endl;
+		found.active = true;
+		update();
 		cout << "Do you want return to main menu? (Y/N)";
 		char B;
 		cin >> B;
@@ -304,6 +331,8 @@ void modify_pin_code() {
 			menu();
 		}
 		else {
+			cout << "\nGoodbye, " << found.name << "!";
+			sleep_for(2s);
 			clean();
 			start();
 		}
@@ -325,6 +354,8 @@ void show_balance() {
 		menu();
 	}
 	else {
+		cout << "\nGoodbye, " << found.name << "!";
+		sleep_for(2s);
 		clean();
 		start();
 	}
@@ -344,7 +375,7 @@ void transfer_between_accounts() {
 			flag = true;
 			cout << "Transfer amount (in KZT): ";
 			cin >> N;
-			if (N >= n.balance && N < 20000 && n.bankID == found.bankID) {
+			if (N <= n.balance && N < 20000 && n.bankID == found.bankID) {
 				cout << endl;
 				cout << "Beneficiary's name: " << n.name << endl;
 				cout << "Confirm transfer? (Y/N): ";
@@ -354,6 +385,19 @@ void transfer_between_accounts() {
 					found.balance -= N;
 					found.lastTransaction = -N;
 					n.lastTransaction = N;
+					update();
+					cout << "Succesfylly! Do you want to return? (Y/N)";
+					cin >> A;
+					if (A == 'Y') {
+						clean();
+						menu();
+						break;
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
 				}
 				else {
 					clean();
@@ -361,7 +405,7 @@ void transfer_between_accounts() {
 					break;
 				}
 			}
-			else if (N >= n.balance + 700 && N > 20000 && n.bankID != found.bankID) {
+			else if (N <= n.balance + 700 && N > 20000 && n.bankID != found.bankID) {
 				cout << endl;
 				cout << "Beneficiary's name: " << n.name << endl;
 				cout << "Confirm transfer? (Y/N): ";
@@ -371,6 +415,19 @@ void transfer_between_accounts() {
 					found.balance -= (N + 700);
 					found.lastTransaction = -(N + 700);
 					n.lastTransaction = N + 700;
+					update();
+					cout << "Succesfylly! Do you want to return? (Y/N)";
+					cin >> A;
+					if (A == 'Y') {
+						clean();
+						menu();
+						break;
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
 				}
 				else {
 					clean();
@@ -378,7 +435,7 @@ void transfer_between_accounts() {
 					break;
 				}
 			}
-			else if (N >= n.balance + 500 && N > 20000 && n.bankID == found.bankID) {
+			else if (N <= n.balance + 500 && N > 20000 && n.bankID == found.bankID) {
 				cout << endl;
 				cout << "Beneficiary's name: " << n.name << endl;
 				cout << "Confirm transfer? (Y/N): ";
@@ -388,6 +445,19 @@ void transfer_between_accounts() {
 					found.balance -= (N + 500);
 					found.lastTransaction = -(N + 500);
 					n.lastTransaction = N + 500;
+					update();
+					cout << "Succesfylly! Do you want to return? (Y/N)";
+					cin >> A;
+					if (A == 'Y') {
+						clean();
+						menu();
+						break;
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
 				}
 				else {
 					clean();
@@ -395,7 +465,7 @@ void transfer_between_accounts() {
 					break;
 				}
 			}
-			else if (N >= n.balance + 200 && N < 20000 && n.bankID != found.bankID) {
+			else if (N <= n.balance + 200 && N < 20000 && n.bankID != found.bankID) {
 				cout << endl;
 				cout << "Beneficiary's name: " << n.name << endl;
 				cout << "Confirm transfer? (Y/N): ";
@@ -405,6 +475,19 @@ void transfer_between_accounts() {
 					found.balance -= (N + 200);
 					found.lastTransaction = -(N + 200);
 					n.lastTransaction = N + 200;
+					update();
+					cout << "Succesfylly! Do you want to return? (Y/N)";
+					cin >> A;
+					if (A == 'Y') {
+						clean();
+						menu();
+						break;
+					}
+					else {
+						clean();
+						transfer_between_accounts();
+						break;
+					}
 				}
 				else {
 					clean();
